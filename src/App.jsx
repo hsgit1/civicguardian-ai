@@ -18,11 +18,31 @@ const aiClient = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY,
 });
 
-async function analyzeWithGemini(title, description, location) {
+function fileToGenerativePart(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      const base64Data = reader.result.split(",")[1];
+
+      resolve({
+        inlineData: {
+          data: base64Data,
+          mimeType: file.type,
+        },
+      });
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function analyzeWithGemini(title, description, location, imageFile) {
   const prompt = `
 You are CivicGuardian AI, an expert civic infrastructure agent for Kolkata and Hooghly communities.
 
-Analyze this community issue and return ONLY valid JSON.
+Analyze this community issue using text and uploaded image if provided. Return ONLY valid JSON.
 
 Issue Title: ${title}
 Description: ${description}
@@ -38,9 +58,21 @@ Return JSON exactly in this structure:
 }
 `;
 
+  const parts = [{ text: prompt }];
+
+  if (imageFile) {
+    const imagePart = await fileToGenerativePart(imageFile);
+    parts.push(imagePart);
+  }
+
   const response = await aiClient.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: prompt,
+    contents: [
+      {
+        role: "user",
+        parts,
+      },
+    ],
     config: {
       responseMimeType: "application/json",
     },
@@ -114,7 +146,7 @@ export default function App() {
     description: "",
     image: null,
   });
-
+  const [imagePreview, setImagePreview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const analyzeIssue = async () => {
@@ -129,7 +161,8 @@ export default function App() {
       const ai = await analyzeWithGemini(
         form.title,
         form.description,
-        form.location
+        form.location,
+        form.image
       );
 
       const newIssue = {
@@ -158,6 +191,7 @@ export default function App() {
         description: "",
         image: null,
       });
+      setImagePreview(null);
 
       setActiveTab("dashboard");
     } catch (error) {
@@ -421,13 +455,25 @@ export default function App() {
                   <span className="text-xs text-slate-500">
                     Gemini Vision integration ready
                   </span>
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Uploaded civic issue preview"
+                      className="mt-4 h-40 w-full object-cover rounded-xl border border-slate-700"
+                    />
+                  )}
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) =>
-                      setForm({ ...form, image: e.target.files[0] })
-                    }
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      setForm({ ...form, image: file });
+
+                      if (file) {
+                        setImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
                   />
                 </label>
               </div>
