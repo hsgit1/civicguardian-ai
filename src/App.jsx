@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { GoogleGenAI } from "@google/genai";
 import {
   MapPin,
@@ -82,11 +82,50 @@ Return JSON exactly in this structure:
   return JSON.parse(text);
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+async function checkDuplicateWithGemini(title, description, location, issues) {
+  const existingIssues = issues.map((issue) => ({
+    id: issue.id,
+    title: issue.title,
+    description: issue.desc,
+    location: issue.location,
+    category: issue.category,
+    status: issue.status,
+  }));
 
-  const [issues, setIssues] = useState([
-    {
+  const prompt = `
+You are CivicGuardian AI Duplicate Detection Agent.
+
+Compare the new civic issue with the existing issue list.
+
+New Issue:
+Title: ${title}
+Description: ${description}
+Location: ${location}
+
+Existing Issues:
+${JSON.stringify(existingIssues, null, 2)}
+
+Return ONLY valid JSON:
+{
+  "isDuplicate": true or false,
+  "duplicateId": number or null,
+  "confidence": "Low | Medium | High",
+  "reason": "short reason"
+}
+`;
+
+  const response = await aiClient.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+
+  const text = response.text;
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  return JSON.parse(cleaned);
+}
+
+const defaultIssues =[
+  {
       id: 1,
       category: "Road Damage",
       title: "Large pothole near station",
@@ -138,7 +177,15 @@ export default function App() {
       aiSummary:
         "Gemini AI identified this as a waste management issue affecting cleanliness and public movement.",
     },
-  ]);
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const [issues, setIssues] = useState(() => {
+    const saved = localStorage.getItem("civicguardian-issues");
+    return saved ? JSON.parse(saved) : defaultIssues;
+  });
 
   const [form, setForm] = useState({
     title: "",
@@ -148,6 +195,14 @@ export default function App() {
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [duplicateAlert, setDuplicateAlert] = useState(null);
+
+  useEffect(() => {
+      localStorage.setItem(
+          "civicguardian-issues",
+          JSON.stringify(issues)
+      );
+  }, [issues]);
 
   const analyzeIssue = async () => {
     if (!form.title || !form.description) {
@@ -158,6 +213,28 @@ export default function App() {
     setIsAnalyzing(true);
 
     try {
+      const duplicate = await checkDuplicateWithGemini(
+        form.title,
+        form.description,
+        form.location,
+        issues
+      );
+
+      if (duplicate.isDuplicate && duplicate.confidence !== "Low") {
+        const matchedIssue = issues.find(
+          (issue) => issue.id === duplicate.duplicateId
+        );
+
+        setDuplicateAlert({
+          ...duplicate,
+          matchedIssue,
+        });
+
+        setIsAnalyzing(false);
+        return;
+      }
+
+      setDuplicateAlert(null);
       const ai = await analyzeWithGemini(
         form.title,
         form.description,
@@ -181,6 +258,7 @@ export default function App() {
         aiSummary: ai.aiSummary,
         recommendedAction: ai.recommendedAction,
         priorityReason: ai.priorityReason,
+        image: imagePreview, // 👈 ADD THIS EXACT LINE HERE
       };
 
       setIssues([newIssue, ...issues]);
@@ -237,6 +315,20 @@ export default function App() {
     (issue) => issue.severity === "High" || issue.severity === "Critical"
   ).length;
   const resolved = issues.filter((issue) => issue.status === "Resolved").length;
+  const criticalIssues = issues.filter(
+    (i) => i.severity === "Critical"
+  ).length;
+
+  const roadDamage = issues.filter(
+    (i) => i.category === "Road Damage"
+  ).length;
+
+  const waste = issues.filter(
+    (i) => i.category === "Waste Management"
+  ).length;
+
+  const mostCommonIssue =
+    roadDamage >= waste ? "Road Damage" : "Waste Management";
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
@@ -333,6 +425,93 @@ export default function App() {
               </div>
             </div>
 
+            <div className="grid md:grid-cols-5 gap-4 mb-8">
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase">
+                  Highest Risk
+                </p>
+
+                <h3 className="text-2xl font-bold text-red-400 mt-2">
+                  {criticalIssues}
+                </h3>
+
+                <p className="text-sm text-slate-400">
+                  Critical Issues
+                </p>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase">
+                  Most Common
+                </p>
+
+                <h3 className="text-lg font-bold text-emerald-400 mt-2">
+                  {mostCommonIssue}
+                </h3>
+
+                <p className="text-sm text-slate-400">
+                  Issue Category
+                </p>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase">
+                  Hotspot
+                </p>
+
+                <h3 className="text-lg font-bold text-yellow-400 mt-2">
+                  Salt Lake • New Town • Gariahat
+                </h3>
+
+                <p className="text-sm text-slate-400">
+                  Highest Activity Zones
+                </p>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase">
+                  Prediction
+                </p>
+
+                <h3 className="text-lg font-bold text-cyan-400 mt-2">
+                  Rishra • Serampore • Konnagar
+                </h3>
+
+                <p className="text-sm text-slate-400">
+                  Predicted Hotspots
+                </p>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase">
+                  Monitoring
+                </p>
+
+                <h3 className="text-sm font-bold text-pink-400 mt-2 leading-6">
+                  Behala • Ballygunge • Tollygunge • Park Street
+                </h3>
+
+                <p className="text-sm text-slate-400">
+                  Live Monitoring
+                </p>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase">
+                  AI Status
+                </p>
+
+                <h3 className="text-lg font-bold text-green-400 mt-2">
+                  Active
+                </h3>
+
+                <p className="text-sm text-slate-400">
+                  Gemini Agents
+                </p>
+              </div>
+
+            </div>
+
             <h2 className="text-lg font-bold tracking-wide text-slate-400 uppercase">
               Active Kolkata Neighborhood Alerts
             </h2>
@@ -366,6 +545,17 @@ export default function App() {
                     <h3 className="text-white font-bold mb-2">{issue.title}</h3>
                     <p className="text-slate-300 text-sm mb-3">{issue.desc}</p>
 
+                    {/* 👇 PASTE THIS BLOCK RIGHT HERE */}
+                    {issue.image && (
+                      <div className="w-full h-48 overflow-hidden rounded-xl mb-3 border border-slate-800 bg-slate-950">
+                        <img 
+                          src={issue.image} 
+                          alt={issue.title} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 text-xs text-slate-400 mb-4 bg-slate-900/60 p-2 rounded-lg">
                       <MapPin size={14} className="text-emerald-500 shrink-0" />
                       <span className="truncate">{issue.location}</span>
@@ -389,7 +579,57 @@ export default function App() {
                           {issue.priorityReason}
                         </p>
                       )}
-                                          </div>
+                     </div>
+                  </div>
+
+                  <div className="mt-4 bg-slate-900 rounded-xl p-4 border border-slate-800">
+
+                    <p className="text-xs text-slate-400 uppercase mb-3">
+                      AI Resolution Timeline
+                    </p>
+
+                    <div className="space-y-2 text-sm">
+
+                      <div className="flex items-center gap-2 text-green-400">
+                        ✅ Vision Agent
+                      </div>
+
+                      <div className="flex items-center gap-2 text-green-400">
+                        ✅ Issue Classification
+                      </div>
+
+                      <div className="flex items-center gap-2 text-green-400">
+                        ✅ Severity Analysis
+                      </div>
+
+                      <div className={`flex items-center gap-2 ${
+                        issue.votes >= 5 ? "text-green-400" : "text-yellow-400"
+                      }`}>
+                        {issue.votes >= 5 ? "✅" : "⏳"} Community Verification
+                      </div>
+
+                      <div className={`flex items-center gap-2 ${
+                        issue.status === "In Progress" || issue.status === "Resolved"
+                          ? "text-green-400"
+                          : "text-yellow-400"
+                      }`}>
+                        {issue.status === "In Progress" || issue.status === "Resolved"
+                          ? "✅"
+                          : "⏳"} Authority Assigned
+                      </div>
+
+                      <div className={`flex items-center gap-2 ${
+                        issue.status === "Resolved"
+                          ? "text-green-400"
+                          : "text-slate-500"
+                      }`}>
+                        {issue.status === "Resolved"
+                          ? "✅"
+                          : "○"} Resolution Complete
+                      </div>
+
+                    </div>
+
                   </div>
 
                   <div className="flex flex-col gap-3 pt-3 border-t border-slate-900">
@@ -443,6 +683,51 @@ export default function App() {
             </p>
 
             <div className="space-y-4">
+              {duplicateAlert && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+                  <h3 className="text-amber-400 font-bold text-sm mb-2">
+                    Possible Duplicate Detected
+                  </h3>
+
+                  <p className="text-xs text-slate-300 mb-2">
+                    {duplicateAlert.reason}
+                  </p>
+
+                  {duplicateAlert.matchedIssue && (
+                    <div className="bg-slate-900 rounded-lg p-3 text-xs text-slate-300">
+                      <p>
+                        <b>Matched Issue:</b> {duplicateAlert.matchedIssue.title}
+                      </p>
+                      <p>
+                        <b>Location:</b> {duplicateAlert.matchedIssue.location}
+                      </p>
+                      <p>
+                        <b>Status:</b> {duplicateAlert.matchedIssue.status}
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (duplicateAlert.matchedIssue) {
+                        handleVote(duplicateAlert.matchedIssue.id);
+                      }
+                      setDuplicateAlert(null);
+                      setActiveTab("dashboard");
+                    }}
+                    className="mt-3 w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-2 rounded-lg"
+                  >
+                    Join Existing Report
+                  </button>
+
+                  <button
+                    onClick={() => setDuplicateAlert(null)}
+                    className="mt-2 w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-lg"
+                  >
+                    Report Anyway
+                  </button>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
                   Issue Photo Attachment
