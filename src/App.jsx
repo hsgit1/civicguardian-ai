@@ -38,6 +38,19 @@ function fileToGenerativePart(file) {
   });
 }
 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      resolve(reader.result);
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 async function analyzeWithGemini(title, description, location, imageFile) {
   const prompt = `
 You are CivicGuardian AI, an expert civic infrastructure agent for Kolkata and Hooghly communities.
@@ -54,8 +67,53 @@ Return JSON exactly in this structure:
   "severity": "Low | Medium | High | Critical",
   "aiSummary": "2 sentence civic impact summary",
   "recommendedAction": "what authority/community should do next",
-  "priorityReason": "why this priority was selected"
+  "priorityReason": "why this priority was selected",
+  "authority":"",
+  "estimatedResponseTime":"",
+  "citizenAdvice":"",
+  "riskScore":"",
+  "department":"",
+  "estimatedPopulation":"",
+  "nearbyLandmark":"",
+  "responseTime":"",
+  "urgency":"",
+  "futureRisk":"",
+  "probability":"",
+  "nextHotspot":"",
+  "preventiveRecommendation":""
 }
+
+
+Authority Mapping:
+
+Road Damage → PWD / Municipal Road Department
+
+Water Leakage → Water Supply Department
+
+Streetlight Issue → Electricity Department
+
+Waste Management → Municipal Sanitation
+
+Electrical Hazard → WBSEDCL
+
+Drainage Issue → Drainage Department
+
+Public Infrastructure → Municipal Corporation
+
+Estimate realistic response time.
+
+Return riskScore from 1-10.
+Location Intelligence Agent:
+Estimate nearbyLandmark, affected population, responsible department, responseTime, and urgency.
+
+Prediction Agent:
+Predict futureRisk, probability, nextHotspot, and preventiveRecommendation.
+
+Use Kolkata/Hooghly context such as Salt Lake, New Town, Gariahat, Behala, Ballygunge, Tollygunge,
+Park Street, Rishra, Serampore, Konnagar where relevant.
+
+Estimate realistic response time.
+Return riskScore from 1-10.
 `;
 
   const parts = [{ text: prompt }];
@@ -78,8 +136,12 @@ Return JSON exactly in this structure:
     },
   });
 
-  const text = response.text;
-  return JSON.parse(text);
+  const cleaned = response.text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  return JSON.parse(cleaned);
 }
 
 async function checkDuplicateWithGemini(title, description, location, issues) {
@@ -192,6 +254,7 @@ export default function App() {
     location: "Fetching current GPS coordinates...",
     description: "",
     image: null,
+    imageBase64: null,
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -258,7 +321,21 @@ export default function App() {
         aiSummary: ai.aiSummary,
         recommendedAction: ai.recommendedAction,
         priorityReason: ai.priorityReason,
-        image: imagePreview, // 👈 ADD THIS EXACT LINE HERE
+        authority: ai.authority,
+        estimatedResponseTime: ai.estimatedResponseTime,
+        citizenAdvice: ai.citizenAdvice,
+        riskScore: ai.riskScore,
+        department: ai.department,
+        estimatedPopulation: ai.estimatedPopulation,
+        nearbyLandmark: ai.nearbyLandmark,
+        responseTime: ai.responseTime,
+        urgency: ai.urgency,
+        futureRisk: ai.futureRisk,
+        probability: ai.probability,
+        nextHotspot: ai.nextHotspot,
+        preventiveRecommendation: ai.preventiveRecommendation,
+        imageUrl: form.imageBase64,
+        resolvedImageUrl: null,
       };
 
       setIssues([newIssue, ...issues]);
@@ -268,13 +345,17 @@ export default function App() {
         location: "Fetching current GPS coordinates...",
         description: "",
         image: null,
+        imageBase64: null,
       });
       setImagePreview(null);
+      setDuplicateAlert(null);
 
       setActiveTab("dashboard");
     } catch (error) {
       console.error("Gemini Core Error:", error);
-      alert("Gemini analysis failed. Check API key, .env file, or browser console.");
+      //alert("Gemini analysis failed. Check API key, .env file, or browser console.");
+      alert(error.message);
+      throw error;
     } finally {
       setIsAnalyzing(false);
     }
@@ -545,16 +626,26 @@ export default function App() {
                     <h3 className="text-white font-bold mb-2">{issue.title}</h3>
                     <p className="text-slate-300 text-sm mb-3">{issue.desc}</p>
 
-                    {/* 👇 PASTE THIS BLOCK RIGHT HERE */}
-                    {issue.image && (
-                      <div className="w-full h-48 overflow-hidden rounded-xl mb-3 border border-slate-800 bg-slate-950">
-                        <img 
-                          src={issue.image} 
-                          alt={issue.title} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
+                   {issue.imageUrl && (
+                    <div className="mb-4">
+                      <p className="text-xs text-slate-500 uppercase mb-2">Reported Image</p>
+                      <img
+                        src={issue.imageUrl}
+                        alt="Reported civic issue"
+                        className="w-full h-40 object-cover rounded-xl border border-slate-700"
+                      />
+                    </div>
+                  )}
+                  {issue.resolvedImageUrl && (
+                    <div className="mb-4">
+                      <p className="text-xs text-green-400 uppercase mb-2">Resolved Image</p>
+                      <img
+                        src={issue.resolvedImageUrl}
+                        alt="Resolved civic issue"
+                        className="w-full h-40 object-cover rounded-xl border border-green-500/40"
+                      />
+                    </div>
+                  )}
 
                     <div className="flex items-center gap-2 text-xs text-slate-400 mb-4 bg-slate-900/60 p-2 rounded-lg">
                       <MapPin size={14} className="text-emerald-500 shrink-0" />
@@ -578,6 +669,75 @@ export default function App() {
                           <b className="text-amber-400">Priority Reason:</b>{" "}
                           {issue.priorityReason}
                         </p>
+                      )}
+                      {issue.authority && (
+                        <p className="text-xs text-blue-300 mt-2">
+                          <b>Responsible Authority:</b> {issue.authority}
+                        </p>
+                      )}
+
+                      {issue.estimatedResponseTime && (
+                        <p className="text-xs text-yellow-300 mt-2">
+                          <b>Estimated Response:</b> {issue.estimatedResponseTime}
+                        </p>
+                      )}
+
+                      {issue.citizenAdvice && (
+                        <p className="text-xs text-green-300 mt-2">
+                          <b>Citizen Advice:</b> {issue.citizenAdvice}
+                        </p>
+                      )}
+
+                      {issue.riskScore && (
+                        <p className="text-xs text-red-400 mt-2">
+                          <b>Risk Score:</b> {issue.riskScore}/10
+                        </p>
+                      )}
+                      {issue.nearbyLandmark && (
+                        <p className="text-xs text-purple-300 mt-2">
+                          <b>Nearby Landmark:</b> {issue.nearbyLandmark}
+                        </p>
+                      )}
+
+                      {issue.estimatedPopulation && (
+                        <p className="text-xs text-cyan-300 mt-2">
+                          <b>Estimated Affected Population:</b> {issue.estimatedPopulation}
+                        </p>
+                      )}
+
+                      {issue.department && (
+                        <p className="text-xs text-blue-300 mt-2">
+                          <b>Assigned Department:</b> {issue.department}
+                        </p>
+                      )}
+
+                      {issue.urgency && (
+                        <p className="text-xs text-red-300 mt-2">
+                          <b>Urgency:</b> {issue.urgency}
+                        </p>
+                      )}
+                      {issue.futureRisk && (
+                        <div className="mt-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <p className="text-xs text-cyan-400 font-bold mb-1">
+                            AI Prediction Agent
+                          </p>
+
+                          <p className="text-xs text-slate-300 mt-1">
+                            <b>Future Risk:</b> {issue.futureRisk}
+                          </p>
+
+                          <p className="text-xs text-slate-300 mt-1">
+                            <b>Probability:</b> {issue.probability}
+                          </p>
+
+                          <p className="text-xs text-slate-300 mt-1">
+                            <b>Next Hotspot:</b> {issue.nextHotspot}
+                          </p>
+
+                          <p className="text-xs text-slate-300 mt-1">
+                            <b>Prevention:</b> {issue.preventiveRecommendation}
+                          </p>
+                        </div>
                       )}
                      </div>
                   </div>
@@ -663,6 +823,32 @@ export default function App() {
                     >
                       Move Status
                     </button>
+                    <label className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-lg text-center cursor-pointer">
+                      Upload Resolved Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+
+                          const resolvedUrl = await fileToBase64(file);
+
+                          setIssues(
+                            issues.map((item) =>
+                              item.id === issue.id
+                                ? {
+                                    ...item,
+                                    resolvedImageUrl: resolvedUrl,
+                                    status: "Resolved",
+                                  }
+                                : item
+                            )
+                          );
+                        }}
+                      />
+                    </label>
                   </div>
                 </div>
               ))}
@@ -751,13 +937,19 @@ export default function App() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files[0];
-                      setForm({ ...form, image: file });
+                      if (!file) return;
 
-                      if (file) {
-                        setImagePreview(URL.createObjectURL(file));
-                      }
+                      const base64Image = await fileToBase64(file);
+
+                      setForm({
+                        ...form,
+                        image: file,
+                        imageBase64: base64Image,
+                      });
+
+                      setImagePreview(base64Image);
                     }}
                   />
                 </label>
