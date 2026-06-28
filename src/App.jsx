@@ -13,6 +13,19 @@ import {
   Users,
   Trophy,
 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 const aiClient = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY,
@@ -193,6 +206,8 @@ const defaultIssues =[
       title: "Large pothole near station",
       desc: "Deep pothole creating accident risk for students, bikes and autos near railway station.",
       location: "Rishra Station Area , Hooghly",
+      lat: 22.7145,
+      lng: 88.3478,
       status: "In Progress",
       votes: 18,
       severity: "High",
@@ -206,6 +221,8 @@ const defaultIssues =[
       title: "Water leakage near main road",
       desc: "Continuous water leakage causing road damage and wastage near busy public area.",
       location: "Salt Lake Sector V, Kolkata",
+      lat: 22.5726,
+      lng: 88.4335,
       status: "Verified",
       votes: 11,
       severity: "Critical",
@@ -219,6 +236,8 @@ const defaultIssues =[
       title: "Streetlight not working near station",
       desc: "Streetlight is completely off, making the road unsafe during night hours.",
       location: "Gariahat Crossing, Kolkata",
+      lat: 22.5195,
+      lng: 88.3656,
       status: "Reported",
       votes: 7,
       severity: "High",
@@ -232,6 +251,8 @@ const defaultIssues =[
       title: "Garbage pile blocking sidewalk",
       desc: "Garbage pile is blocking pedestrian movement and creating hygiene problems.",
       location: "Rishra Market Area, Hooghly",
+      lat: 22.7102,
+      lng: 88.3518,
       status: "Resolved",
       votes: 28,
       severity: "Medium",
@@ -259,6 +280,7 @@ export default function App() {
   const [imagePreview, setImagePreview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState(null);
+  const [gpsStatus, setGpsStatus] = useState("Detect GPS");
 
   useEffect(() => {
       localStorage.setItem(
@@ -266,6 +288,35 @@ export default function App() {
           JSON.stringify(issues)
       );
   }, [issues]);
+
+  const detectGPS = () => {
+  if (!navigator.geolocation) {
+    alert("GPS not supported");
+    return;
+  }
+
+  setGpsStatus("Detecting...");
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      setForm({
+        ...form,
+        location: `Live GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+        lat,
+        lng,
+      });
+
+      setGpsStatus("GPS Captured");
+    },
+    () => {
+      alert("GPS permission denied. Using manual location.");
+      setGpsStatus("GPS Denied");
+    }
+  );
+};
 
   const analyzeIssue = async () => {
     if (!form.title || !form.description) {
@@ -336,6 +387,8 @@ export default function App() {
         preventiveRecommendation: ai.preventiveRecommendation,
         imageUrl: form.imageBase64,
         resolvedImageUrl: null,
+        lat: form.lat || 22.5726,
+        lng: form.lng || 88.3639,
       };
 
       setIssues([newIssue, ...issues]);
@@ -400,19 +453,34 @@ export default function App() {
     (i) => i.severity === "Critical"
   ).length;
 
-  const roadDamage = issues.filter(
-    (i) => i.category === "Road Damage"
-  ).length;
-
-  const waste = issues.filter(
-    (i) => i.category === "Waste Management"
-  ).length;
+  const categoryCounts = issues.reduce((acc, issue) => {
+    acc[issue.category] = (acc[issue.category] || 0) + 1;
+    return acc;
+  }, {});
 
   const mostCommonIssue =
-    roadDamage >= waste ? "Road Damage" : "Waste Management";
+    Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+    "No issues yet";
+
+  const areaCounts = issues.reduce((acc, issue) => {
+    const area = issue.location?.split(",")[0] || "Unknown Area";
+    acc[area] = (acc[area] || 0) + 1;
+    return acc;
+  }, {});
+
+  const mostReportedArea =
+    Object.entries(areaCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+    "No hotspot yet";
+
+  const resolutionRate =
+    issues.length === 0 ? 0 : Math.round((resolved / issues.length) * 100);
+
+  const predictedHotspot =
+    issues.find((issue) => issue.nextHotspot)?.nextHotspot ||
+    "Rishra • Serampore • Konnagar";
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100 font-sans">
       <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="bg-emerald-500 text-slate-950 p-2 rounded-xl font-black text-xl flex items-center gap-2 shadow-lg shadow-emerald-500/20">
@@ -506,7 +574,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-5 gap-4 mb-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
                 <p className="text-xs text-slate-500 uppercase">
                   Highest Risk
@@ -541,7 +609,7 @@ export default function App() {
                 </p>
 
                 <h3 className="text-lg font-bold text-yellow-400 mt-2">
-                  Salt Lake • New Town • Gariahat
+                  {mostReportedArea}
                 </h3>
 
                 <p className="text-sm text-slate-400">
@@ -555,7 +623,7 @@ export default function App() {
                 </p>
 
                 <h3 className="text-lg font-bold text-cyan-400 mt-2">
-                  Rishra • Serampore • Konnagar
+                  {predictedHotspot}
                 </h3>
 
                 <p className="text-sm text-slate-400">
@@ -565,15 +633,15 @@ export default function App() {
 
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
                 <p className="text-xs text-slate-500 uppercase">
-                  Monitoring
+                  Resolution Rate
                 </p>
 
-                <h3 className="text-sm font-bold text-pink-400 mt-2 leading-6">
-                  Behala • Ballygunge • Tollygunge • Park Street
+                <h3 className="text-2xl font-bold text-pink-400 mt-2">
+                  {resolutionRate}%
                 </h3>
 
                 <p className="text-sm text-slate-400">
-                  Live Monitoring
+                  Completed Cases
                 </p>
               </div>
 
@@ -593,6 +661,43 @@ export default function App() {
 
             </div>
 
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+              <h2 className="text-lg font-bold text-white mb-3">
+                Live Civic Issue Map
+              </h2>
+
+              <div className="h-96 rounded-xl overflow-hidden">
+                <MapContainer
+                  center={[22.5726, 88.3639]}
+                  zoom={11}
+                  scrollWheelZoom={false}
+                  className="h-full w-full"
+                >
+                  <TileLayer
+                    attribution="&copy; OpenStreetMap contributors"
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+
+                  {issues.map((issue) => (
+                    <Marker
+                      key={issue.id}
+                      position={[issue.lat || 22.5726, issue.lng || 88.3639]}
+                    >
+                      <Popup>
+                        <b>{issue.title}</b>
+                        <br />
+                        {issue.category}
+                        <br />
+                        Severity: {issue.severity}
+                        <br />
+                        Status: {issue.status}
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+            </div>
+
             <h2 className="text-lg font-bold tracking-wide text-slate-400 uppercase">
               Active Kolkata Neighborhood Alerts
             </h2>
@@ -601,7 +706,7 @@ export default function App() {
               {issues.map((issue) => (
                 <div
                   key={issue.id}
-                  className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-emerald-500/40 transition flex flex-col justify-between"
+                  className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-2xl p-5 hover:border-emerald-400/60 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex justify-between items-start mb-3 gap-3">
@@ -971,6 +1076,14 @@ export default function App() {
                 placeholder="Add details: danger level, nearby landmark, public impact..."
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
               />
+
+              <button
+                type="button"
+                onClick={detectGPS}
+                className="w-full bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold py-3 rounded-xl mb-4"
+              >
+                {gpsStatus}
+              </button>
 
               <input
                 value={form.location}
