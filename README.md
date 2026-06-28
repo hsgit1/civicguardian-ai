@@ -1,16 +1,62 @@
-# React + Vite
+# CivicGuardian AI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI-powered hyperlocal civic issue reporting and resolution platform built for Vibe2Ship 2026.
 
-Currently, two official plugins are available:
+## Problem Statement
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Community Hero - Hyperlocal Problem Solver
 
-## React Compiler
+## Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+CivicGuardian AI enables citizens to report local civic issues such as potholes, water leakage, broken streetlights, waste management problems, drainage issues, and electrical hazards.
 
-## Expanding the ESLint configuration
+The platform uses Google Gemini to analyze text and images, classify issue type, assess severity, detect duplicates, recommend responsible authorities, estimate risk, and generate future hotspot predictions.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Key Features
+
+- Gemini Vision based issue analysis
+- AI issue categorization
+- AI severity and risk scoring
+- Duplicate detection agent
+- Location intelligence agent
+- Prediction agent
+- Live GPS detection
+- Interactive map with OpenStreetMap
+- Community verification
+- Resolution timeline
+- Before/after issue images
+- Local persistence using localStorage
+- Dashboard analytics
+- Gamified community heroes
+
+## Tech Stack
+
+- React
+- Vite
+- Tailwind CSS
+- Google Gemini API
+- Google AI Studio
+- Leaflet
+- OpenStreetMap
+- GitHub Codespaces
+
+## Google Technologies Used
+
+- Google AI Studio
+- Gemini 2.5 Flash
+- Gemini multimodal image + text analysis
+
+## AI Agent Flow
+
+Citizen Report  
+→ Gemini Vision Agent  
+→ Issue Classification Agent  
+→ Severity Analysis Agent  
+→ Duplicate Detection Agent  
+→ Location Intelligence Agent  
+→ Prediction Agent  
+→ Dashboard + Map + Community Verification
+
+## Impact
+
+CivicGuardian AI improves civic issue reporting by making the process transparent, intelligent, location-aware, and community-driven.

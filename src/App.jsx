@@ -549,25 +549,25 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
                 <AlertTriangle className="text-rose-400" />
                 <h3 className="text-3xl font-bold mt-2">{issues.length}</h3>
                 <p className="text-sm text-slate-400">Total Issues</p>
               </div>
 
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
                 <ShieldCheck className="text-amber-400" />
                 <h3 className="text-3xl font-bold mt-2">{highRisk}</h3>
                 <p className="text-sm text-slate-400">High Risk</p>
               </div>
 
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
                 <Users className="text-blue-400" />
                 <h3 className="text-3xl font-bold mt-2">{totalVotes}</h3>
                 <p className="text-sm text-slate-400">Verifications</p>
               </div>
 
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
                 <Trophy className="text-emerald-400" />
                 <h3 className="text-3xl font-bold mt-2">{resolved}</h3>
                 <p className="text-sm text-slate-400">Resolved Issues</p>
@@ -650,7 +650,11 @@ export default function App() {
                   AI Status
                 </p>
 
-                <h3 className="text-lg font-bold text-green-400 mt-2">
+                <h3 className="text-lg font-bold text-green-400 mt-2 flex items-center gap-2">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400"></span>
+                  </span>
                   Active
                 </h3>
 
@@ -962,7 +966,7 @@ export default function App() {
         )}
 
         {activeTab === "report" && (
-          <div className="max-w-xl mx-auto bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+          <div className="max-w-xl mx-auto bg-slate-950/80 backdrop-blur border border-slate-800 rounded-2xl p-6 shadow-2xl shadow-emerald-500/10">
             <h2 className="text-xl font-bold mb-1 flex items-center gap-2 text-white">
               <Camera className="text-emerald-500" /> Smart AI Report Console
             </h2>
