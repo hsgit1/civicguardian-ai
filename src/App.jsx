@@ -206,9 +206,9 @@ const defaultIssues =[
       category: "Road Damage",
       title: "Large pothole near station",
       desc: "Deep pothole creating accident risk for students, bikes and autos near railway station.",
-      location: "Rishra Station Area , Hooghly",
-      lat: 22.7145,
-      lng: 88.3478,
+      location: "Konnagar Station Area , Hooghly",
+      lat: 22.7003,
+      lng: 88.3472,
       status: "In Progress",
       votes: 18,
       severity: "High",
@@ -239,7 +239,7 @@ const defaultIssues =[
       location: "Gariahat Crossing, Kolkata",
       lat: 22.5195,
       lng: 88.3656,
-      status: "Reported",
+      status: "Verified",
       votes: 7,
       severity: "High",
       points: 50,
@@ -261,13 +261,58 @@ const defaultIssues =[
       aiSummary:
         "Gemini AI identified this as a waste management issue affecting cleanliness and public movement.",
     },
+    {
+      id: 5,
+      category: "Traffic Signal",
+      title: "Broken traffic signal at Park Street Crossing",
+      desc: "Traffic signal has stopped working, causing congestion and increasing accident risk during peak office hours.",
+      location: "Park Street Crossing, Kolkata",
+      lat: 22.5525,
+      lng: 88.3529,
+      status: "Reported",
+      votes: 16,
+      severity: "Critical",
+      points: 90,
+      aiSummary:
+        "Gemini AI classified this as a critical traffic management issue. Immediate repair is recommended to avoid accidents and severe congestion.",
+    },
+    {
+      id: 6,
+      category: "Drainage",
+      title: "Drainage overflow near Behala Market",
+      desc: "Overflowing roadside drainage is creating waterlogging, foul smell and mosquito breeding around the market area.",
+      location: "Behala Market Area, Kolkata",
+      lat: 22.4986,
+      lng: 88.3194,
+      status: "Verified",
+      votes: 13,
+      severity: "High",
+      points: 75,
+      aiSummary:
+        "Gemini AI detected a public health concern caused by drainage overflow. Immediate cleaning is recommended to prevent sanitation and mosquito-related issues.",
+    },
+    {
+      id: 7,
+      category: "Electrical Hazard",
+      title: "Electrical hazard near New Town Bus Stop",
+      desc: "An exposed electrical distribution box is sparking beside the bus stop, posing serious danger to commuters.",
+      location: "New Town Bus Stop, Kolkata",
+      lat: 22.5778,
+      lng: 88.4794,
+      status: "In Progress",
+      votes: 21,
+      severity: "Critical",
+      points: 110,
+      aiSummary:
+        "Gemini AI identified a critical electrical safety hazard. Immediate isolation of the area and urgent inspection by the electricity department is recommended.",
+    },
 ];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [issues, setIssues] = useState(() => {
-    const saved = localStorage.getItem("civicguardian-issues");
+    const saved = localStorage.getItem("civicguardian-issues-v2");
     return saved ? JSON.parse(saved) : defaultIssues;
   });
 
@@ -285,21 +330,27 @@ export default function App() {
 
   useEffect(() => {
       localStorage.setItem(
-          "civicguardian-issues",
+          "civicguardian-issues-v2",
           JSON.stringify(issues)
       );
   }, [issues]);
 
-  const detectGPS = () => {
+const detectGPS = () => {
   if (!navigator.geolocation) {
-    alert("GPS not supported");
+    setForm({
+      ...form,
+      location: "Park Street Crossing, Kolkata",
+      lat: 22.5525,
+      lng: 88.3529,
+    });
+    setGpsStatus("GPS Fallback Used");
     return;
   }
 
   setGpsStatus("Detecting...");
 
   navigator.geolocation.getCurrentPosition(
-    async (position) => {
+    (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
@@ -313,12 +364,22 @@ export default function App() {
       setGpsStatus("GPS Captured");
     },
     () => {
-      alert("GPS permission denied. Using manual location.");
-      setGpsStatus("GPS Denied");
+      setForm({
+        ...form,
+        location: "Park Street Crossing, Kolkata",
+        lat: 22.5525,
+        lng: 88.3529,
+      });
+
+      setGpsStatus("GPS Fallback Used");
+    },
+    {
+      enableHighAccuracy: false,
+      timeout: 5000,
+      maximumAge: 60000,
     }
   );
 };
-
   const analyzeIssue = async () => {
     if (!form.title || !form.description) {
       alert("Please enter issue title and description");
@@ -529,7 +590,7 @@ export default function App() {
             }`}
           >
             <span className="flex items-center gap-2">
-              <Award size={16} /> Heroes
+              <Award size={16} /> 🏆 Heroes
             </span>
           </button>
         </nav>
@@ -541,8 +602,8 @@ export default function App() {
             <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl p-8 shadow-2xl shadow-emerald-500/20">
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-300/20 rounded-full blur-3xl animate-pulse"></div>
-              <h1 className="text-3xl font-bold mb-2 text-white">
-                AI Civic Intelligence for Smarter Communities
+              <h1 className="text-3xl font-bold mb-2 text-white tracking-wide animate-pulse">
+                🏙️ AI Civic Intelligence for Smarter Communities
               </h1>
               <p className="text-emerald-100 max-w-3xl">
                 CivicGuardian AI helps citizens report, verify, track and resolve local issues using Gemini Vision,
@@ -554,7 +615,7 @@ export default function App() {
               <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-rose-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 cursor-pointer">
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-rose-500/20 rounded-full blur-2xl group-hover:bg-rose-500/30"></div>
                 <AlertTriangle className="text-rose-400 w-9 h-9 animate-pulse" />
-                <h3 className="text-4xl font-black mt-3 text-white">{issues.length}</h3>
+                <h3 className="text-4xl font-black mt-3 text-rose-400">↑ {issues.length}</h3>
                 <p className="text-sm text-slate-400 mt-1">Total Issues</p>
                 <p className="text-xs text-rose-300 mt-3">Live civic reports tracked</p>
               </div>
@@ -562,7 +623,7 @@ export default function App() {
               <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-amber-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 cursor-pointer">
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-500/30"></div>
                 <ShieldCheck className="text-amber-400 w-9 h-9 animate-pulse" />
-                <h3 className="text-4xl font-black mt-3 text-white">{highRisk}</h3>
+                <h3 className="text-4xl font-black mt-3 text-amber-400">🔥 {highRisk}</h3>
                 <p className="text-sm text-slate-400 mt-1">High Risk</p>
                 <p className="text-xs text-amber-300 mt-3">Urgent priority cases</p>
               </div>
@@ -570,7 +631,7 @@ export default function App() {
               <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-blue-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 cursor-pointer">
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30"></div>
                 <Users className="text-blue-400 w-9 h-9 animate-pulse" />
-                <h3 className="text-4xl font-black mt-3 text-white">{totalVotes}</h3>
+                <h3 className="text-4xl font-black mt-3 text-blue-400">+{totalVotes}</h3>
                 <p className="text-sm text-slate-400 mt-1">Verifications</p>
                 <p className="text-xs text-blue-300 mt-3">Community trust signals</p>
               </div>
@@ -578,7 +639,7 @@ export default function App() {
               <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-emerald-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer">
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/30"></div>
                 <Trophy className="text-emerald-400 w-9 h-9 animate-bounce" />
-                <h3 className="text-4xl font-black mt-3 text-white">{resolved}</h3>
+                <h3 className="text-4xl font-black mt-3 text-emerald-400">✔ {resolved}</h3>
                 <p className="text-sm text-slate-400 mt-1">Resolved Issues</p>
                 <p className="text-xs text-emerald-300 mt-3">Completed civic actions</p>
               </div>
@@ -678,8 +739,8 @@ export default function App() {
               Every civic report is pinned geographically so communities and authorities can identify hotspots faster.
             </p>
             <div className="bg-slate-950/80 backdrop-blur border border-emerald-500/20 rounded-3xl p-5 shadow-2xl shadow-emerald-500/10">
-              <h2 className="text-lg font-bold text-white mb-3">
-                Live Civic Issue Map
+              <h2 className="text-lg font-bold text-white tracking-wide animate-pulse mb-3">
+                🗺 Live Civic Issue Map
               </h2>
 
               <div className="h-[420px] rounded-2xl overflow-hidden border border-slate-700 shadow-xl">
@@ -713,10 +774,101 @@ export default function App() {
                   ))}
                 </MapContainer>
               </div>
+              <div className="mt-6 bg-slate-950 rounded-3xl border border-slate-800 p-6">
+
+                <h2 className="text-xl font-black text-white mb-5">
+                ⚡ AI Workflow
+                </h2>
+
+                <div className="flex flex-wrap justify-center items-center gap-3 text-sm">
+
+                <div className="bg-slate-900 rounded-xl px-4 py-3">
+                Citizen
+                </div>
+
+                ➡
+
+                <div className="bg-slate-900 rounded-xl px-4 py-3">
+                Upload Image
+                </div>
+
+                ➡
+
+                <div className="bg-emerald-500 text-black rounded-xl px-4 py-3 font-bold">
+                Gemini Vision
+                </div>
+
+                ➡
+
+                <div className="bg-slate-900 rounded-xl px-4 py-3">
+                Classification
+                </div>
+
+                ➡
+
+                <div className="bg-slate-900 rounded-xl px-4 py-3">
+                Severity
+                </div>
+
+                ➡
+
+                <div className="bg-slate-900 rounded-xl px-4 py-3">
+                Verification
+                </div>
+
+                ➡
+
+                <div className="bg-slate-900 rounded-xl px-4 py-3">
+                Resolution
+                </div>
+
+                </div>
+
+                </div>
             </div>
 
-            <h2 className="text-lg font-bold tracking-wide text-slate-400 uppercase">
-              Active Kolkata Neighborhood Alerts
+            <div className="bg-slate-950/80 backdrop-blur border border-emerald-500/20 rounded-3xl p-6 mb-6 shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-4">
+                🧠 AI Agents Running
+              </h3>
+
+              <div className="grid md:grid-cols-5 gap-4">
+
+                <div className="bg-slate-900 rounded-2xl p-4 text-center hover:scale-105 transition-all">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mx-auto animate-pulse mb-2"></div>
+                  <h4 className="font-semibold text-white">Vision Agent</h4>
+                  <p className="text-xs text-slate-400">Image Analysis</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 text-center hover:scale-105 transition-all">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mx-auto animate-pulse mb-2"></div>
+                  <h4 className="font-semibold text-white">Severity Agent</h4>
+                  <p className="text-xs text-slate-400">Risk Detection</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 text-center hover:scale-105 transition-all">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mx-auto animate-pulse mb-2"></div>
+                  <h4 className="font-semibold text-white">Duplicate Agent</h4>
+                  <p className="text-xs text-slate-400">Duplicate Check</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 text-center hover:scale-105 transition-all">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mx-auto animate-pulse mb-2"></div>
+                  <h4 className="font-semibold text-white">Prediction Agent</h4>
+                  <p className="text-xs text-slate-400">Hotspot Forecast</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 text-center hover:scale-105 transition-all">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mx-auto animate-pulse mb-2"></div>
+                  <h4 className="font-semibold text-white">Community Agent</h4>
+                  <p className="text-xs text-slate-400">Verification Engine</p>
+                </div>
+
+              </div>
+            </div>
+
+            <h2 className="text-lg font-bold tracking-wide text-emerald-300 uppercase">
+              🚨 Live Community Issue Feed
             </h2>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -980,14 +1132,13 @@ export default function App() {
 
         {activeTab === "report" && (
           <div className="max-w-xl mx-auto bg-slate-950/80 backdrop-blur border border-slate-800 rounded-2xl p-6 shadow-2xl shadow-emerald-500/10">
-            <h2 className="text-xl font-bold mb-1 flex items-center gap-2 text-white">
-              <Camera className="text-emerald-500" /> Smart AI Report Console
+            <h2 className="text-2xl font-black text-white flex items-center gap-2 tracking-wide">
+              🚨 AI Smart Reporting Center
             </h2>
 
-            <p className="text-xs text-slate-400 mb-6">
-              Upload or describe a civic issue. Gemini AI will classify the
-              category, assess severity, generate a summary and create a public
-              issue card.
+            <p className="text-slate-400">
+              Upload an image or describe a civic issue. Gemini Vision analyzes the report, classifies the category, estimates severity, 
+              generates a civic summary and places the issue on the live community map.
             </p>
 
             <div className="space-y-4">
@@ -1131,8 +1282,8 @@ export default function App() {
         {activeTab === "leaderboard" && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-500 rounded-3xl p-6 shadow-2xl shadow-amber-500/20">
-              <h2 className="text-3xl font-black text-slate-950 flex items-center gap-3">
-                <Award /> Community Heroes
+              <h2 className="text-3xl font-black text-slate-950 flex items-center gap-3 tracking-wide">
+                <Award /> 🏆 Community Heroes
               </h2>
               <p className="text-slate-900 mt-2 max-w-3xl font-medium">
                 CivicGuardian AI turns community participation into civic impact.
@@ -1146,7 +1297,9 @@ export default function App() {
               <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
                 <p className="text-xs text-slate-500 uppercase">Reports Submitted</p>
                 <h3 className="text-3xl font-black text-emerald-400 mt-2">
-                  {issues.length + 24}
+                  <span className="text-emerald-400">
+                  ↑ {issues.length}
+                  </span>
                 </h3>
                 <p className="text-sm text-slate-400">Community contributions</p>
               </div>
@@ -1154,7 +1307,9 @@ export default function App() {
               <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
                 <p className="text-xs text-slate-500 uppercase">Reports Verified</p>
                 <h3 className="text-3xl font-black text-blue-400 mt-2">
-                  {totalVotes}
+                  <span className="text-cyan-400">
+                  +{totalVotes}
+                  </span>
                 </h3>
                 <p className="text-sm text-slate-400">Crowd validation score</p>
               </div>
@@ -1162,7 +1317,9 @@ export default function App() {
               <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
                 <p className="text-xs text-slate-500 uppercase">Resolved Impact</p>
                 <h3 className="text-3xl font-black text-green-400 mt-2">
-                  {resolved}
+                  <span className="text-green-400">
+                  ✔ {resolved}
+                  </span>
                 </h3>
                 <p className="text-sm text-slate-400">Issues completed</p>
               </div>
@@ -1310,6 +1467,41 @@ export default function App() {
             </div>
           </div>
         )}
+        <footer className="mt-10 bg-slate-950 border-t border-slate-800 rounded-3xl p-6">
+
+          <h2 className="text-xl font-black text-white mb-5">
+          ⚙ Powered By
+          </h2>
+
+          <div className="flex flex-wrap gap-3">
+
+          <span className="px-4 py-2 rounded-full bg-blue-500/20 text-blue-300">
+          Google Gemini
+          </span>
+
+          <span className="px-4 py-2 rounded-full bg-orange-500/20 text-orange-300">
+          Firebase Hosting
+          </span>
+
+          <span className="px-4 py-2 rounded-full bg-green-500/20 text-green-300">
+          React
+          </span>
+
+          <span className="px-4 py-2 rounded-full bg-cyan-500/20 text-cyan-300">
+          Tailwind CSS
+          </span>
+
+          <span className="px-4 py-2 rounded-full bg-purple-500/20 text-purple-300">
+          Leaflet
+          </span>
+
+          <span className="px-4 py-2 rounded-full bg-pink-500/20 text-pink-300">
+          OpenStreetMap
+          </span>
+
+          </div>
+
+          </footer>
       </main>
     </div>
   );
