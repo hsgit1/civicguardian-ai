@@ -1118,54 +1118,182 @@ export default function App() {
         )}
 
         {activeTab === "leaderboard" && (
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-1 text-white flex items-center gap-2">
-                <Award className="text-amber-400" /> Community Heroes
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-500 rounded-3xl p-6 shadow-2xl shadow-amber-500/20">
+              <h2 className="text-3xl font-black text-slate-950 flex items-center gap-3">
+                <Award /> Community Heroes
               </h2>
-
-              <p className="text-xs text-slate-400 mb-6">
-                Citizens earn points for reporting and verifying issues.
-                Gamification encourages transparent civic participation.
+              <p className="text-slate-900 mt-2 max-w-3xl font-medium">
+                CivicGuardian AI turns community participation into civic impact.
+                Citizens earn points, badges and recognition for reporting genuine
+                issues, verifying nearby reports and helping authorities resolve
+                problems faster.
               </p>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-slate-900/40 rounded-xl border border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <span className="text-md font-bold text-amber-400 w-6 text-center">
-                      #1
-                    </span>
-                    <div>
-                      <h4 className="text-sm font-semibold text-slate-200">
-                        Himanshu Singh
-                      </h4>
-                      <p className="text-xs text-slate-500">
-                        CivicGuardian AI Founder • Kolkata
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full font-bold border border-emerald-500/20">
-                    {totalPoints} Points
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
+                <p className="text-xs text-slate-500 uppercase">Reports Submitted</p>
+                <h3 className="text-3xl font-black text-emerald-400 mt-2">
+                  {issues.length + 24}
+                </h3>
+                <p className="text-sm text-slate-400">Community contributions</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
+                <p className="text-xs text-slate-500 uppercase">Reports Verified</p>
+                <h3 className="text-3xl font-black text-blue-400 mt-2">
+                  {totalVotes}
+                </h3>
+                <p className="text-sm text-slate-400">Crowd validation score</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
+                <p className="text-xs text-slate-500 uppercase">Resolved Impact</p>
+                <h3 className="text-3xl font-black text-green-400 mt-2">
+                  {resolved}
+                </h3>
+                <p className="text-sm text-slate-400">Issues completed</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 hover:scale-105 transition-all duration-300">
+                <p className="text-xs text-slate-500 uppercase">Reward Pool</p>
+                <h3 className="text-3xl font-black text-amber-400 mt-2">
+                  ₹5,000
+                </h3>
+                <p className="text-sm text-slate-400">Prototype civic rewards</p>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="bg-slate-950/90 border border-amber-500/30 rounded-3xl p-6 shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="text-5xl mb-4">🥇</div>
+                <h3 className="text-xl font-black text-white">Himanshu Singh</h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  CivicGuardian AI Founder • Kolkata
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full">
+                    🛡 Civic Guardian
+                  </span>
+                  <span className="text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                    🔥 Community Leader
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center p-3 bg-slate-900/20 rounded-xl border border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <span className="text-md font-bold text-slate-400 w-6 text-center">
-                      #2
-                    </span>
-                    <div>
-                      <h4 className="text-sm font-semibold text-slate-300">
-                        Kolkata Community
-                      </h4>
-                      <p className="text-xs text-slate-500">
-                        {totalVotes} verifications submitted
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs bg-slate-800 text-slate-400 px-3 py-1 rounded-full font-bold border border-slate-700">
-                    Active
+                <div className="mt-5 space-y-2 text-sm text-slate-300">
+                  <p>🚧 18 road issues reported</p>
+                  <p>✅ 42 reports verified</p>
+                  <p>⚡ 12 high-risk alerts escalated</p>
+                </div>
+
+                <div className="mt-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
+                  <p className="text-xs text-amber-300 uppercase">Reward Earned</p>
+                  <h4 className="text-2xl font-black text-amber-400">
+                    {totalPoints + 200} Points
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Eligible for Civic Impact Certificate + Local Reward Coupon
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-950/90 border border-emerald-500/30 rounded-3xl p-6 shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="text-5xl mb-4">🥈</div>
+                <h3 className="text-xl font-black text-white">Kolkata Volunteers</h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  Hyperlocal verification network
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full">
+                    👁 Fast Verifier
                   </span>
+                  <span className="text-xs bg-green-500/10 text-green-300 border border-green-500/30 px-3 py-1 rounded-full">
+                    🌱 Clean City Supporter
+                  </span>
+                </div>
+
+                <div className="mt-5 space-y-2 text-sm text-slate-300">
+                  <p>👥 {totalVotes} verifications submitted</p>
+                  <p>📍 9 hotspot zones monitored</p>
+                  <p>⏱ Avg verification time: 11 min</p>
+                </div>
+
+                <div className="mt-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4">
+                  <p className="text-xs text-emerald-300 uppercase">Reward Earned</p>
+                  <h4 className="text-2xl font-black text-emerald-400">
+                    620 Points
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Eligible for Community Hero Badge + Leaderboard Recognition
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-950/90 border border-cyan-500/30 rounded-3xl p-6 shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="text-5xl mb-4">🥉</div>
+                <h3 className="text-xl font-black text-white">Salt Lake Response Group</h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  Fastest civic response cluster
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="text-xs bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-full">
+                    💧 Water Saver
+                  </span>
+                  <span className="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full">
+                    📊 Impact Analyst
+                  </span>
+                </div>
+
+                <div className="mt-5 space-y-2 text-sm text-slate-300">
+                  <p>💧 7 leakage issues escalated</p>
+                  <p>✅ 4 issues resolved</p>
+                  <p>📈 91% impact score</p>
+                </div>
+
+                <div className="mt-5 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-4">
+                  <p className="text-xs text-cyan-300 uppercase">Reward Earned</p>
+                  <h4 className="text-2xl font-black text-cyan-400">
+                    480 Points
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Eligible for Priority Reporter Status + Civic Recognition
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/90 border border-slate-800 rounded-3xl p-6">
+              <h3 className="text-xl font-black text-white mb-4">
+                Reward System Logic
+              </h3>
+
+              <div className="grid md:grid-cols-4 gap-4 text-sm">
+                <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+                  <p className="text-2xl mb-2">📸</p>
+                  <h4 className="font-bold text-emerald-400">Report Issue</h4>
+                  <p className="text-slate-400 mt-1">+20 points for genuine reports</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+                  <p className="text-2xl mb-2">👁</p>
+                  <h4 className="font-bold text-blue-400">Verify Issue</h4>
+                  <p className="text-slate-400 mt-1">+10 points for validation</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+                  <p className="text-2xl mb-2">🚨</p>
+                  <h4 className="font-bold text-red-400">High-Risk Alert</h4>
+                  <p className="text-slate-400 mt-1">+30 points for urgent reports</p>
+                </div>
+
+                <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+                  <p className="text-2xl mb-2">✅</p>
+                  <h4 className="font-bold text-green-400">Resolve Case</h4>
+                  <p className="text-slate-400 mt-1">+50 points after resolution proof</p>
                 </div>
               </div>
             </div>
