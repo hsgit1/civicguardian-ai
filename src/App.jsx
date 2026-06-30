@@ -538,40 +538,49 @@ export default function App() {
       <main className="max-w-6xl mx-auto p-6">
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 shadow-xl">
+            <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl p-8 shadow-2xl shadow-emerald-500/20">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-300/20 rounded-full blur-3xl animate-pulse"></div>
               <h1 className="text-3xl font-bold mb-2 text-white">
-                Community Hero — Hyperlocal Problem Solver
+                AI Civic Intelligence for Smarter Communities
               </h1>
               <p className="text-emerald-100 max-w-3xl">
-                Report potholes, water leakage, broken streetlights and garbage
-                issues. Gemini-powered civic agents classify, prioritize,
-                summarize and track community problems transparently.
+                CivicGuardian AI helps citizens report, verify, track and resolve local issues using Gemini Vision,
+                live maps, community validation and predictive civic intelligence.
               </p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
-                <AlertTriangle className="text-rose-400" />
-                <h3 className="text-3xl font-bold mt-2">{issues.length}</h3>
-                <p className="text-sm text-slate-400">Total Issues</p>
+              <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-rose-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 cursor-pointer">
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-rose-500/20 rounded-full blur-2xl group-hover:bg-rose-500/30"></div>
+                <AlertTriangle className="text-rose-400 w-9 h-9 animate-pulse" />
+                <h3 className="text-4xl font-black mt-3 text-white">{issues.length}</h3>
+                <p className="text-sm text-slate-400 mt-1">Total Issues</p>
+                <p className="text-xs text-rose-300 mt-3">Live civic reports tracked</p>
               </div>
 
-              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
-                <ShieldCheck className="text-amber-400" />
-                <h3 className="text-3xl font-bold mt-2">{highRisk}</h3>
-                <p className="text-sm text-slate-400">High Risk</p>
+              <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-amber-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 cursor-pointer">
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-500/30"></div>
+                <ShieldCheck className="text-amber-400 w-9 h-9 animate-pulse" />
+                <h3 className="text-4xl font-black mt-3 text-white">{highRisk}</h3>
+                <p className="text-sm text-slate-400 mt-1">High Risk</p>
+                <p className="text-xs text-amber-300 mt-3">Urgent priority cases</p>
               </div>
 
-              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
-                <Users className="text-blue-400" />
-                <h3 className="text-3xl font-bold mt-2">{totalVotes}</h3>
-                <p className="text-sm text-slate-400">Verifications</p>
+              <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-blue-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 cursor-pointer">
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30"></div>
+                <Users className="text-blue-400 w-9 h-9 animate-pulse" />
+                <h3 className="text-4xl font-black mt-3 text-white">{totalVotes}</h3>
+                <p className="text-sm text-slate-400 mt-1">Verifications</p>
+                <p className="text-xs text-blue-300 mt-3">Community trust signals</p>
               </div>
 
-              <div className="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
-                <Trophy className="text-emerald-400" />
-                <h3 className="text-3xl font-bold mt-2">{resolved}</h3>
-                <p className="text-sm text-slate-400">Resolved Issues</p>
+              <div className="group relative overflow-hidden bg-slate-950/80 backdrop-blur border border-emerald-500/20 rounded-3xl p-6 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer">
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/30"></div>
+                <Trophy className="text-emerald-400 w-9 h-9 animate-bounce" />
+                <h3 className="text-4xl font-black mt-3 text-white">{resolved}</h3>
+                <p className="text-sm text-slate-400 mt-1">Resolved Issues</p>
+                <p className="text-xs text-emerald-300 mt-3">Completed civic actions</p>
               </div>
             </div>
 
@@ -665,13 +674,15 @@ export default function App() {
               </div>
 
             </div>
-
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+            <p className="text-sm text-slate-400 mb-4">
+              Every civic report is pinned geographically so communities and authorities can identify hotspots faster.
+            </p>
+            <div className="bg-slate-950/80 backdrop-blur border border-emerald-500/20 rounded-3xl p-5 shadow-2xl shadow-emerald-500/10">
               <h2 className="text-lg font-bold text-white mb-3">
                 Live Civic Issue Map
               </h2>
 
-              <div className="h-96 rounded-xl overflow-hidden">
+              <div className="h-[420px] rounded-2xl overflow-hidden border border-slate-700 shadow-xl">
                 <MapContainer
                   center={[22.5726, 88.3639]}
                   zoom={11}
